@@ -17,5 +17,8 @@ fn main() {
         .expect("unsuccessfull parse")
         .next().unwrap();
 
-    println!("{:?}", file);
+    for row in file.into_inner() {
+        print!("{}", row.into_inner().next().unwrap().as_str());
+        print!("\n");
+    }
 }
