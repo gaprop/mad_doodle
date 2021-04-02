@@ -3,8 +3,6 @@ extern crate pest;
 extern crate pest_derive;
 
 use std::fs;
-use std::cell::{RefCell, RefMut};
-use std::rc::Rc;
 
 use pest::Parser;
 
@@ -15,7 +13,7 @@ pub struct CSVParser;
 const MAX_DAYS: usize = 40;
 const NUM_OF_PEOPLE: usize = 15;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Person {
     days: [Option<Mark>; MAX_DAYS],
     priority: Option<u32>,
@@ -37,34 +35,29 @@ fn run(mut persons: Vec<Person>) {
     let mut mad_doodle = Vec::new();
     for day in 0..MAX_DAYS {
         // Find the person with the max priority.
-        let mut max_person = None;
+        let mut max_person: Option<Person> = None;
         for person in persons.iter_mut() {
-            match (&max_person, person.priority, person.days[day]) {
+            match (max_person, person.priority, person.days[day]) {
                 // If there is no max priority person yet, set the current person to be the max
                 // priority person. The person needs to have a mark on the current day to be set as max_person.
                 (None, _, Some(Mark::Mark)) => {
-                    max_person = Some(person)
+                    max_person = Some(*person)
                 }
                 // If there already is a max priority person. Check if the current person is less than
                 // the max priority person. 
                 (Some(max_p), Some(priority), Some(Mark::Mark)) => {
                     if let Some(max_priority) = max_p.priority {
                         if priority > max_priority {
-                            max_person = Some(person)
+                            max_person = Some(*person)
                         }
                     }
                 },
                 // In all other cases, do nothing.
                 _ => (),
             };
+            person.priority = person.priority.map(|p| p + 1);
         }
 
-        for person in persons.iter_mut() {
-            match person.priority {
-                Some(mut p) => p += 1,
-                None    => (),
-            }
-        }
 
         match max_person {
             Some(mut max_person) => {
@@ -74,6 +67,7 @@ fn run(mut persons: Vec<Person>) {
             None => mad_doodle.push(None),
         }
     }
+    println!("{:?}", mad_doodle);
 }
 
 fn setup(file: &str) -> Vec<Person> {
