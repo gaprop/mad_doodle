@@ -20,7 +20,7 @@ struct Person {
     room: u32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 enum Mark {
     Mark,
 }
@@ -35,7 +35,7 @@ fn run(mut persons: Vec<Person>) {
     let mut mad_doodle = Vec::new();
     for day in 0..MAX_DAYS {
         // Find the person with the max priority.
-        let mut max_person: Option<Person> = None;
+        let mut max_person = None;
         for person in persons.iter_mut() {
             match (max_person, person.priority, person.days[day]) {
                 // If there is no max priority person yet, set the current person to be the max
@@ -55,15 +55,21 @@ fn run(mut persons: Vec<Person>) {
                 // In all other cases, do nothing.
                 _ => (),
             };
-            person.priority = person.priority.map(|p| p + 1);
         }
-
-
+        // FIXME: Not the prettiest way to do this... propably
+        // Insert the person with the maximum priority into the mad_doodle list
+        // Also increment every persons priority by 1
         match max_person {
-            Some(mut max_person) => {
-                max_person.priority = Some(0);
-                mad_doodle.push(Some(max_person.room));
-            },
+            Some(mut max_person) => persons = persons.iter_mut()
+                .map(|mut person| {
+                    person.priority = person.priority.map(|p| p + 1);
+                    if max_person.room == person.room {
+                        max_person.priority = Some(0);
+                        mad_doodle.push(Some(max_person.room));
+                        return max_person;
+                    }
+                    *person
+                }).collect(),
             None => mad_doodle.push(None),
         }
     }
