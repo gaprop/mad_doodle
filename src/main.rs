@@ -3,6 +3,7 @@ extern crate pest;
 extern crate pest_derive;
 
 use std::fs;
+use std::env;
 
 use pest::Parser;
 
@@ -26,7 +27,8 @@ enum Mark {
 }
 
 fn main() {
-    let file = fs::read_to_string("mad.csv").expect("cannot read file");
+    let filename = env::args().nth(1).expect("Needs a file");
+    let file = fs::read_to_string(filename).expect("cannot read file");
     let persons = setup(&file);
     run(persons);
 }
@@ -73,7 +75,15 @@ fn run(mut persons: Vec<Person>) {
             None => mad_doodle.push(None),
         }
     }
-    println!("{:?}", mad_doodle);
+    // Print the room numbers in their order
+    mad_doodle
+        .iter()
+        .for_each(|x| {
+            match x {
+                Some(num) => println!("{}", num),
+                None      => println!("Ingen..."),
+            }
+        })
 }
 
 fn setup(file: &str) -> Vec<Person> {
