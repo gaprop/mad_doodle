@@ -7,8 +7,7 @@ use std::env;
 
 use pest::Parser;
 
-#[derive(Parser)]
-#[grammar = "csv.pest"]
+#[derive(Parser)] #[grammar = "csv.pest"]
 pub struct CSVParser;
 
 const MAX_DAYS: usize = 40;
@@ -36,54 +35,59 @@ fn main() {
 fn run(mut persons: Vec<Person>) {
     let mut mad_doodle = Vec::new();
     for day in 0..MAX_DAYS {
-        // Find the person with the max priority.
-        let mut max_person = None;
-        for person in persons.iter_mut() {
-            match (max_person, person.priority, person.days[day]) {
-                // If there is no max priority person yet, set the current person to be the max
-                // priority person. The person needs to have a mark on the current day to be set as max_person.
-                (None, _, Some(Mark::Mark)) => {
-                    max_person = Some(*person)
-                }
-                // If there already is a max priority person. Check if the current person is less than
-                // the max priority person. 
-                (Some(max_p), Some(priority), Some(Mark::Mark)) => {
-                    if let Some(max_priority) = max_p.priority {
-                        if priority > max_priority {
-                            max_person = Some(*person)
-                        }
-                    }
-                },
-                // In all other cases, do nothing.
-                _ => (),
-            };
-        }
-        // FIXME: Not the prettiest way to do this... propably
+        let mut max_person = find_max_person(day, &persons);
+          
         // Insert the person with the maximum priority into the mad_doodle list
         // Also increment every persons priority by 1
         match max_person {
-            Some(mut max_person) => persons = persons.iter_mut()
-                .map(|mut person| {
-                    person.priority = person.priority.map(|p| p + 1);
-                    if max_person.room == person.room {
-                        max_person.priority = Some(0);
+            Some(max_person) => {
+                for i in 0..persons.len() {
+                    persons[i].priority = persons[i].priority.map(|p| p + 1);
+                    if max_person.room == persons[i].room {
+                        persons[i].priority = Some(0);
                         mad_doodle.push(Some(max_person.room));
-                        return max_person;
-                    }
-                    *person
-                }).collect(),
+                    } }
+            },
             None => mad_doodle.push(None),
         }
     }
+
     // Print the room numbers in their order
-    mad_doodle
-        .iter()
-        .for_each(|x| {
-            match x {
-                Some(num) => println!("{}", num),
-                None      => println!("Ingen..."),
-            }
-        })
+    for i in 0..mad_doodle.len() {
+        match mad_doodle[i] {
+                Some(num) => println!("dag: {} - værelse: {}", i + 1, num),
+                None      => println!("dag: {} - værelse: Ingen...", i + 1),
+        }
+    }
+}
+
+fn find_max_person(day: usize, persons: &Vec<Person>) -> Option<Person> {
+    // Find the person with the max priority.
+    let mut max_person = None;
+    for person in persons.iter() {
+        match (max_person, person.priority, person.days[day]) {
+            (_, None, Some(Mark::Mark)) => {
+                max_person = Some(*person)
+            },
+            // If there is no max priority person yet, set the current person to be the max
+            // priority person. The person needs to have a mark on the current day to be set as max_person.
+            (None, _, Some(Mark::Mark)) => {
+                max_person = Some(*person)
+            },
+            // If there already is a max priority person. Check if the current person is less than
+            // the max priority person. 
+            (Some(max_p), Some(priority), Some(Mark::Mark)) => {
+                if let Some(max_priority) = max_p.priority {
+                    if priority > max_priority {
+                        max_person = Some(*person)
+                    }
+                }
+            },
+            // In all other cases, do nothing.
+            _ => (),
+        }
+    }
+    max_person
 }
 
 fn setup(file: &str) -> Vec<Person> {
@@ -134,6 +138,14 @@ fn setup(file: &str) -> Vec<Person> {
             }
             room_num += 1;
         }
+    }
+    for i in 0..persons.len() {
+        persons[i].priority = persons[i].days.iter().fold(Some(MAX_DAYS), |acc, d|{
+            match (acc, d) {
+                (Some(acc), Some(Mark::Mark)) => Some(acc - 1),
+                _                             => acc,
+            }
+        });
     }
     persons
 }

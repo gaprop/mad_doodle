@@ -1,3 +1,5 @@
+WHITESPACE = _{ " " }
+
 // For marking 
 x = { ^"x" }
 
@@ -11,7 +13,7 @@ month = { ^"januar" | ^"februar" | ^"marts" | ^"april" | ^"maj" | ^"juni" | ^"ju
 
 num = { ASCII_DIGIT+ }
 
-date = { (day ~ " " ~ num ~ "." ~ month) | "Dato" }
+date = { (day ~ num ~ "." ~ month) | "Dato" }
 
 // For house number
 house = { ASCII_DIGIT+ }
