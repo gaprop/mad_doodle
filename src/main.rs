@@ -140,7 +140,7 @@ fn setup(file: &str) -> Vec<Person> {
         }
     }
     for i in 0..persons.len() {
-        persons[i].priority = persons[i].days.iter().fold(Some(MAX_DAYS), |acc, d|{
+        persons[i].priority = persons[i].days.iter().fold(Some(MAX_DAYS as u32), |acc, d|{
             match (acc, d) {
                 (Some(acc), Some(Mark::Mark)) => Some(acc - 1),
                 _                             => acc,
